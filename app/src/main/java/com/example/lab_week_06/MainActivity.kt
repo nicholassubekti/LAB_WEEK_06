@@ -1,27 +1,24 @@
 package com.example.lab_week_06
 
 import android.os.Bundle
-import androidx.appcompat.app.AlertDialog     // ✅ tambahkan import ini!
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.example.lab_week_06.model.CatBreed
 import com.example.lab_week_06.model.CatModel
+import com.example.lab_week_06.model.CatBreed
 import com.example.lab_week_06.model.Gender
 
 class MainActivity : AppCompatActivity() {
-
-    private val recyclerView: RecyclerView by lazy { findViewById(R.id.recycler_view) }
+    private val recyclerView: RecyclerView by lazy {
+        findViewById(R.id.recycler_view)
+    }
 
     private val catAdapter by lazy {
-        CatAdapter(layoutInflater, GlideImageLoader(this)) { cat ->
-            // 🔹 Menampilkan popup dialog saat item diklik
-            AlertDialog.Builder(this)
-                .setTitle("Cat Selected")
-                .setMessage("You have selected cat ${cat.name}")
-                .setPositiveButton("OK", null)
-                .show()
-        }
+        CatAdapter(layoutInflater, GlideImageLoader(this), object : CatAdapter.OnClickListener {
+            override fun onItemClick(cat: CatModel) = showSelectionDialog(cat)
+        })
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -29,9 +26,12 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
 
         recyclerView.adapter = catAdapter
-        recyclerView.layoutManager = LinearLayoutManager(this)
+        recyclerView.layoutManager = LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false)
 
-        // 🔹 Data dummy sama seperti commit no 1
+        // attach swipe-to-delete
+        val itemTouchHelper = ItemTouchHelper(catAdapter.swipeToDeleteCallback)
+        itemTouchHelper.attachToRecyclerView(recyclerView)
+
         catAdapter.setData(
             listOf(
                 CatModel(
@@ -55,7 +55,16 @@ class MainActivity : AppCompatActivity() {
                     "Award winning investigator",
                     "https://cdn2.thecatapi.com/images/bar.jpg"
                 )
+                // tambahkan sampai 10 item sesuai tugas bila diperlukan
             )
         )
+    }
+
+    private fun showSelectionDialog(cat: CatModel) {
+        AlertDialog.Builder(this)
+            .setTitle("Cat Selected")
+            .setMessage("You have selected cat ${cat.name}")
+            .setPositiveButton("OK") { _, _ -> }
+            .show()
     }
 }
